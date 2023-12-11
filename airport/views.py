@@ -19,7 +19,8 @@ from airport.serializers import (
     CrewSerializer,
     RouteSerializer,
     OrderSerializer,
-    FlightSerializer
+    FlightSerializer, RouteListSerializer, RouteDetailSerializer, OrderListSerializer, FlightListSerializer,
+    FlightDetailSerializer
 )
 
 
@@ -48,7 +49,7 @@ class AirplaneTypeViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
-    queryset = AirplaneType.objects.all()
+    queryset = AirplaneType.objects.select_related("airplane_type")
     serializer_class = AirplaneTypeSerializer
     permission_classes = (IsAuthenticatedOrIsAdminReadOnly, )
 
@@ -69,9 +70,16 @@ class RouteViewSet(
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet
 ):
-    queryset = Route.objects.all()
+    queryset = Route.objects.select_related("source", "destination")
     serializer_class = RouteSerializer
     permission_classes = (IsAuthenticatedOrIsAdminReadOnly, )
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return RouteListSerializer
+        if self.action == "retrieve":
+            return RouteDetailSerializer
+        return RouteSerializer
 
 
 class OrderViewSet(
@@ -79,12 +87,36 @@ class OrderViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
-    queryset = Order.objects.all()
+    queryset = Order.objects.prefetch_related(
+        "tickets__flight__route",
+        "tickets__flight__airplane"
+    )
     serializer_class = OrderSerializer
     permission_classes = (IsAuthenticated, )
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return OrderListSerializer
+        return OrderSerializer
 
 
 class FlightViewSet(viewsets.ModelViewSet):
     queryset = Flight.objects.all()
     serializer_class = FlightSerializer
     permission_classes = (IsAuthenticatedOrIsAdminReadOnly, )
+
+    def get_queryset(self):
+        if self.action == "list":
+            return (
+                self.queryset
+                .select_related("route", "airplane")
+                .prefetch_related("crew")
+            )
+        return self.queryset
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return FlightListSerializer
+        if self.action == "retrieve":
+            return FlightDetailSerializer
+        return FlightSerializer

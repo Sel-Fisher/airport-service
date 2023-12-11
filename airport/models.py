@@ -8,7 +8,7 @@ class Airport(models.Model):
     closest_big_city = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.name
+        return f"{self.name} in {self.closest_big_city}"
 
 
 class AirplaneType(models.Model):
@@ -26,12 +26,12 @@ class Airplane(models.Model):
         AirplaneType, related_name="airplanes", on_delete=models.CASCADE
     )
 
+    def __str__(self):
+        return self.name
+
     @property
     def capacity(self) -> int:
         return self.rows * self.seats_in_row
-
-    def __str__(self):
-        return self.name
 
     class Meta:
         ordering = ["name"]
@@ -44,11 +44,17 @@ class Crew(models.Model):
     def __str__(self):
         return self.first_name + " " + self.last_name
 
+    @property
+    def full_name(self) -> str:
+        return f"{self.first_name} {self.last_name}"
+
 
 class Route(models.Model):
-    source = models.ForeignKey(Airport, related_name="routes", on_delete=models.CASCADE)
+    source = models.ForeignKey(
+        Airport, related_name="route_source", on_delete=models.CASCADE
+    )
     destination = models.ForeignKey(
-        Airport, related_name="routes", on_delete=models.CASCADE
+        Airport, related_name="route_destinations", on_delete=models.CASCADE
     )
     distance = models.IntegerField()
 
