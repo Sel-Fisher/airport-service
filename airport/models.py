@@ -59,7 +59,7 @@ class Route(models.Model):
     distance = models.IntegerField()
 
     def __str__(self):
-        return str(self.source) + " " + str(self.destination)
+        return f"From: {str(self.source)} to {str(self.destination)}"
 
 
 class Order(models.Model):
