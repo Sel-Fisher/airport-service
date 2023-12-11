@@ -60,6 +60,7 @@ class RouteListSerializer(RouteSerializer):
     )
 
     class Meta:
+        model = Route
         fields = ("id", "source", "destination", "distance")
 
 
@@ -129,6 +130,7 @@ class FlightListSerializer(FlightSerializer):
     )
 
     class Meta:
+        model = Flight
         fields = (
             "id",
             "route_str",
