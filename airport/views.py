@@ -1,21 +1,15 @@
 from datetime import datetime
 
 from django.db.models import F, Count
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 
-from airport.models import (
-    Airport,
-    Airplane,
-    AirplaneType,
-    Crew,
-    Route,
-    Order,
-    Flight
-)
+from airport.models import Airport, Airplane, AirplaneType, Crew, Route, Order, Flight
 from airport.permissions import IsAuthenticatedOrIsAdminReadOnly
 from airport.serializers import (
     AirportSerializer,
@@ -29,7 +23,9 @@ from airport.serializers import (
     RouteDetailSerializer,
     OrderListSerializer,
     FlightListSerializer,
-    FlightDetailSerializer, AirplaneListSerializer, AirplaneImageSerializer
+    FlightDetailSerializer,
+    AirplaneListSerializer,
+    AirplaneImageSerializer,
 )
 
 
@@ -40,17 +36,15 @@ class AirportViewSet(
 ):
     queryset = Airport.objects.all()
     serializer_class = AirportSerializer
-    permission_classes = (IsAuthenticatedOrIsAdminReadOnly, )
+    permission_classes = (IsAuthenticatedOrIsAdminReadOnly,)
 
 
 class AirplaneViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet
+    mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet
 ):
     queryset = Airplane.objects.all()
     serializer_class = AirplaneSerializer
-    permission_classes = (IsAuthenticatedOrIsAdminReadOnly, )
+    permission_classes = (IsAuthenticatedOrIsAdminReadOnly,)
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -63,9 +57,10 @@ class AirplaneViewSet(
         methods=["POST"],
         detail=True,
         url_path="upload-image",
-        permission_classes=[IsAdminUser]
+        permission_classes=[IsAdminUser],
     )
     def upload_image(self, request, pk=None):
+        """endpoint for upload image to airplane"""
         airplane = self.get_object()
         serializer = self.get_serializer(airplane, data=request.data)
 
@@ -76,36 +71,33 @@ class AirplaneViewSet(
 
 
 class AirplaneTypeViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet
+    mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet
 ):
     queryset = AirplaneType.objects.select_related("airplane_type")
     serializer_class = AirplaneTypeSerializer
-    permission_classes = (IsAuthenticatedOrIsAdminReadOnly, )
+    permission_classes = (IsAuthenticatedOrIsAdminReadOnly,)
 
 
 class CrewViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet
+    mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet
 ):
     queryset = Crew.objects.all()
     serializer_class = CrewSerializer
-    permission_classes = (IsAuthenticatedOrIsAdminReadOnly, )
+    permission_classes = (IsAuthenticatedOrIsAdminReadOnly,)
 
 
 class RouteViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
-    viewsets.GenericViewSet
+    viewsets.GenericViewSet,
 ):
     queryset = Route.objects.select_related("source", "destination")
     serializer_class = RouteSerializer
-    permission_classes = (IsAuthenticatedOrIsAdminReadOnly, )
+    permission_classes = (IsAuthenticatedOrIsAdminReadOnly,)
 
     def get_queryset(self):
+        """get routes with filters"""
         source_str = self.request.query_params.get("source")
         destination_str = self.request.query_params.get("destination")
         queryset = self.queryset
@@ -124,6 +116,23 @@ class RouteViewSet(
             return RouteDetailSerializer
         return RouteSerializer
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "source",
+                type=OpenApiTypes.STR,
+                description="Filter by source name (ex. ?source=сharles)",
+            ),
+            OpenApiParameter(
+                "destination",
+                type=OpenApiTypes.STR,
+                description="Filter by destination name (ex. ?destination=heathrow)",
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
 
 class OrderPagination(PageNumberPagination):
     page_size = 10
@@ -131,17 +140,14 @@ class OrderPagination(PageNumberPagination):
 
 
 class OrderViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet
+    mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet
 ):
     queryset = Order.objects.prefetch_related(
-        "tickets__flight__route",
-        "tickets__flight__airplane"
+        "tickets__flight__route", "tickets__flight__airplane"
     )
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user.pk)
@@ -162,15 +168,15 @@ class FlightViewSet(viewsets.ModelViewSet):
         .prefetch_related("crew")
         .annotate(
             tickets_available=(
-                F("airplane__rows") * F("airplane__seats_in_row")
-                - Count("tickets")
+                F("airplane__rows") * F("airplane__seats_in_row") - Count("tickets")
             )
         )
     )
     serializer_class = FlightSerializer
-    permission_classes = (IsAuthenticatedOrIsAdminReadOnly, )
+    permission_classes = (IsAuthenticatedOrIsAdminReadOnly,)
 
     def get_queryset(self):
+        """get flights with filters"""
         departure_time = self.request.query_params.get("departure_time")
         route_id_str = self.request.query_params.get("route")
 
@@ -191,3 +197,23 @@ class FlightViewSet(viewsets.ModelViewSet):
         if self.action == "retrieve":
             return FlightDetailSerializer
         return FlightSerializer
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "route",
+                type=OpenApiTypes.INT,
+                description="Filter by route id (ex. ?route=1)",
+            ),
+            OpenApiParameter(
+                "departure_time",
+                type=OpenApiTypes.DATE,
+                description=(
+                    "Filter by datetime of departure time "
+                    "(ex. ?departure_date=2024-01-01)"
+                ),
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
