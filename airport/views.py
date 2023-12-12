@@ -178,7 +178,7 @@ class FlightViewSet(viewsets.ModelViewSet):
 
         if departure_time:
             date = datetime.strptime(departure_time, "%Y-%m-%d").date()
-            queryset = queryset.filter(show_time__date=date)
+            queryset = queryset.filter(departure_time__date=date)
 
         if route_id_str:
             queryset = queryset.filter(route_id=int(route_id_str))
