@@ -148,7 +148,6 @@ class FlightDetailSerializer(FlightSerializer):
     taken_places = TicketSeatsSerializer(
         source="tickets", many=True, read_only=True
     )
-    airplane_image = serializers.ImageField(source="airplane.image", read_only=True)
 
     class Meta:
         model = Flight

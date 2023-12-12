@@ -106,14 +106,14 @@ class RouteViewSet(
     permission_classes = (IsAuthenticatedOrIsAdminReadOnly, )
 
     def get_queryset(self):
-        source_id_str = self.request.query_params.get("source")
-        destination_id_str = self.request.query_params.get("destination")
+        source_str = self.request.query_params.get("source")
+        destination_str = self.request.query_params.get("destination")
         queryset = self.queryset
 
-        if source_id_str:
-            queryset = queryset.filter(source_id=int(source_id_str))
-        if destination_id_str:
-            queryset = queryset.filter(destination_in=int(destination_id_str))
+        if source_str:
+            queryset = queryset.filter(source__name__icontains=source_str)
+        if destination_str:
+            queryset = queryset.filter(destination__name__icontains=destination_str)
 
         return queryset.distinct()
 
