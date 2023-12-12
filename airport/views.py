@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from django.db.models import F, Count
 from django.shortcuts import render
 from rest_framework import viewsets, mixins
 from rest_framework.pagination import PageNumberPagination
@@ -132,6 +133,12 @@ class FlightViewSet(viewsets.ModelViewSet):
         Flight.objects.all()
         .select_related("route", "airplane")
         .prefetch_related("crew")
+        .annotate(
+            tickets_available=(
+                F("airplane__rows") * F("airplane__seats_in_row")
+                - Count("tickets")
+            )
+        )
     )
     serializer_class = FlightSerializer
     permission_classes = (IsAuthenticatedOrIsAdminReadOnly, )
