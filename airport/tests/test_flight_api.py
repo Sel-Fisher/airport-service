@@ -71,18 +71,20 @@ class AuthenticatedFlightApiTests(TestCase):
         airport_start = sample_airport(name="ervretbsrtbdr")
         airport_end = sample_airport(name="ttymytynftynf")
         route_1 = sample_route(source=airport_start, destination=airport_end)
-        route_2 = Route.objects.create(source=airport_end, destination=airport_start, distance=690)
+        route_2 = Route.objects.create(
+            source=airport_end, destination=airport_start, distance=690
+        )
         flight_1 = Flight.objects.create(
             route=route_1,
             airplane=airplane,
             departure_time="2024-01-01T10:00:00Z",
-            arrival_time="2024-01-04T10:00:00Z"
+            arrival_time="2024-01-04T10:00:00Z",
         )
         flight_2 = Flight.objects.create(
             route=route_2,
             airplane=airplane,
             departure_time="2024-01-04T10:00:00Z",
-            arrival_time="2024-01-07T10:00:00Z"
+            arrival_time="2024-01-07T10:00:00Z",
         )
 
         flights = Flight.objects.order_by("id")
@@ -99,18 +101,20 @@ class AuthenticatedFlightApiTests(TestCase):
         airport_start = sample_airport(name="ervretbsrtbdr")
         airport_end = sample_airport(name="ttymytynftynf")
         route_1 = sample_route(source=airport_start, destination=airport_end)
-        route_2 = Route.objects.create(source=airport_end, destination=airport_start, distance=690)
+        route_2 = Route.objects.create(
+            source=airport_end, destination=airport_start, distance=690
+        )
         flight_1 = Flight.objects.create(
             route=route_1,
             airplane=airplane,
             departure_time="2024-01-01T10:00:00Z",
-            arrival_time="2024-01-04T10:00:00Z"
+            arrival_time="2024-01-04T10:00:00Z",
         )
         flight_2 = Flight.objects.create(
             route=route_2,
             airplane=airplane,
             departure_time="2024-01-04T10:00:00Z",
-            arrival_time="2024-01-07T10:00:00Z"
+            arrival_time="2024-01-07T10:00:00Z",
         )
         response = self.client.get(FLIGHT_URL, {"departure_time": "2024-01-04"})
 
@@ -129,23 +133,23 @@ class AuthenticatedFlightApiTests(TestCase):
         airport_start = sample_airport(name="ervretbsrtbdr")
         airport_end = sample_airport(name="ttymytynftynf")
         route_1 = sample_route(source=airport_start, destination=airport_end)
-        route_2 = Route.objects.create(source=airport_end, destination=airport_start, distance=690)
+        route_2 = Route.objects.create(
+            source=airport_end, destination=airport_start, distance=690
+        )
         flight_1 = Flight.objects.create(
             route=route_1,
             airplane=airplane,
             departure_time="2024-01-01T10:00:00Z",
-            arrival_time="2024-01-04T10:00:00Z"
+            arrival_time="2024-01-04T10:00:00Z",
         )
         flight_2 = Flight.objects.create(
             route=route_2,
             airplane=airplane,
             departure_time="2024-01-04T10:00:00Z",
-            arrival_time="2024-01-07T10:00:00Z"
+            arrival_time="2024-01-07T10:00:00Z",
         )
 
-        response = self.client.get(
-            FLIGHT_URL, {"route": f"{route_1.id}"}
-        )
+        response = self.client.get(FLIGHT_URL, {"route": f"{route_1.id}"})
 
         remove_tickets_available(response.data)
 

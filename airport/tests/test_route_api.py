@@ -69,7 +69,9 @@ class AuthenticatedRouteAPITest(TestCase):
         airport_start = sample_airport(name="testairport2")
         airport_end = sample_airport(name="testairport1")
         route_1 = sample_route(source=airport_start, destination=airport_end)
-        route_2 = Route.objects.create(source=airport_end, destination=airport_start, distance=690)
+        route_2 = Route.objects.create(
+            source=airport_end, destination=airport_start, distance=690
+        )
 
         serializer_1 = RouteListSerializer(route_1)
         serializer_2 = RouteListSerializer(route_2)
