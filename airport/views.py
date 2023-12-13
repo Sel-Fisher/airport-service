@@ -42,7 +42,7 @@ class AirportViewSet(
 class AirplaneViewSet(
     mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet
 ):
-    queryset = Airplane.objects.all()
+    queryset = Airplane.objects.select_related("airplane_type")
     serializer_class = AirplaneSerializer
     permission_classes = (IsAuthenticatedOrIsAdminReadOnly,)
 
@@ -73,7 +73,7 @@ class AirplaneViewSet(
 class AirplaneTypeViewSet(
     mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet
 ):
-    queryset = AirplaneType.objects.select_related("airplane_type")
+    queryset = AirplaneType.objects.all()
     serializer_class = AirplaneTypeSerializer
     permission_classes = (IsAuthenticatedOrIsAdminReadOnly,)
 
